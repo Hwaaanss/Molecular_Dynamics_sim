@@ -21,6 +21,8 @@ dependencies:
   - openbabel        # SDF -> mol2 변환, 양성자화
   - ambertools       # antechamber, GAFF/AM1-BCC (ACPYPE 백엔드)
   - acpype           # SDF/mol2 -> GROMACS itp/gro
+  - pdbfixer         # 결손 원자/잔기 복원, 헤테로원자 제거
+  - openmm           # pdbfixer 의존성
   - mdtraj           # 궤적 분석(보조)
   # --- 시뮬레이션 (전처리/검증용; GPU 빌드는 GPU_SETUP.md 참고) ---
   - gromacs

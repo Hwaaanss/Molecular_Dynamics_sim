@@ -103,9 +103,12 @@ PROD_NSTEPS=1000000 GPU_ID=1 ./scripts/run_pipeline.sh 6VQN md
 ```
 
 ### 6. 중단 후 재시작 / GPU 가속
+- **GPU 는 이미 설정 완료**: CUDA GROMACS 가 `~/gromacs-gpu` 에 빌드돼 있고
+  `scripts/common.sh` 가 자동으로 사용한다. A100(GPU 0)에서 비결합 계산을 가속한다.
+  (이 노드 특성상 PME/update/bonded 의 GPU 오프로딩은 불안정해 비결합만 GPU 로 둔다.
+   자세한 내용·제약 → [docs/GPU_SETUP.md](docs/GPU_SETUP.md))
 - 정전·멈춤 후 동일 명령을 다시 실행하면 완료 단계는 건너뛰고 `.cpt`
   체크포인트에서 자동 재개된다. → [docs/CHECKPOINT_RESTART.md](docs/CHECKPOINT_RESTART.md)
-- GPU 빌드/실행 환경변수 → [docs/GPU_SETUP.md](docs/GPU_SETUP.md)
 
 ### 7. 백그라운드 장시간 실행 예시
 세션이 끊겨도 계속 돌도록 `tmux` 세션 안에서 실행하는 것을 권장한다.

@@ -58,7 +58,7 @@ pbc             = xyz
 EOF
 
 "${GMX}" grompp -f em.mdp -c solv_ions.gro -p topol.top -o em.tpr -maxwarn 1
-# EM(steep)은 -update gpu 미지원 → 비결합력만 GPU 오프로딩
+# EM(steep)은 비동역학 적분기 → PME/update GPU 미지원, 비결합력만 GPU 오프로딩
 run_mdrun em ${MDRUN_GPU}
 
 # ---------------------------------------------------------------------------
@@ -67,18 +67,21 @@ run_mdrun em ${MDRUN_GPU}
 # ---------------------------------------------------------------------------
 if [[ ! -f index.ndx ]]; then
   log "[${PROTEIN}] index.ndx 생성 (Protein_LIG / Water_and_ions)"
+  # 커스텀 인덱스를 주면 기본 그룹이 자동 포함되지 않으므로 System 도 명시한다
+  # (production md.mdp 의 compressed-x-grps = System 에서 필요).
   "${GMX}" select -s em.tpr -on index.ndx \
-    -select "\"Protein_LIG\" group \"Protein\" or resname ${LIG_NAME}" \
+    -select "\"System\" all" \
+            "\"Protein_LIG\" group \"Protein\" or resname ${LIG_NAME}" \
             "\"Water_and_ions\" not (group \"Protein\" or resname ${LIG_NAME})"
 fi
 
 # =========================== 2) NVT 평형화 =================================
-log "[${PROTEIN}] === Stage 2: NVT equilibration (100 ps) ==="
-cat > nvt.mdp << 'EOF'
+log "[${PROTEIN}] === Stage 2: NVT equilibration (${NVT_NSTEPS} steps) ==="
+cat > nvt.mdp << EOF
 ; nvt.mdp - 위치제한 하 온도 평형화
-define          = -DPOSRES -DPOSRES_LIG
+define          = -DPOSRES -DPOSRES_${LIG_NAME}
 integrator      = md
-nsteps          = 50000      ; 2 fs * 50000 = 100 ps
+nsteps          = ${NVT_NSTEPS}   ; 2 fs/step
 dt              = 0.002
 ; 출력
 nstxout         = 0
@@ -121,12 +124,12 @@ EOF
 run_mdrun nvt ${MDRUN_GPU_UPDATE}
 
 # =========================== 3) NPT 평형화 =================================
-log "[${PROTEIN}] === Stage 3: NPT equilibration (100 ps) ==="
-cat > npt.mdp << 'EOF'
+log "[${PROTEIN}] === Stage 3: NPT equilibration (${NPT_NSTEPS} steps) ==="
+cat > npt.mdp << EOF
 ; npt.mdp - 위치제한 하 압력 평형화
-define          = -DPOSRES -DPOSRES_LIG
+define          = -DPOSRES -DPOSRES_${LIG_NAME}
 integrator      = md
-nsteps          = 50000      ; 2 fs * 50000 = 100 ps
+nsteps          = ${NPT_NSTEPS}   ; 2 fs/step
 dt              = 0.002
 ; 출력
 nstxout         = 0

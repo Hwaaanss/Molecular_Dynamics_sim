@@ -62,6 +62,18 @@ awk '
 cp -f "${LIG_GRO}" LIG.gro
 [[ -f "${POSRE_LIG_SRC}" ]] && cp -f "${POSRE_LIG_SRC}" "posre_${LIG_NAME}.itp"
 
+# ACPYPE 는 posre include 를 _GMX.top 에만 넣고 .itp 에는 넣지 않는다.
+# → LIG.itp 에 직접 추가해야 -DPOSRES_LIG 가 실제로 리간드를 제한한다.
+if [[ -f "posre_${LIG_NAME}.itp" ]] && ! grep -q "posre_${LIG_NAME}.itp" LIG.itp; then
+  cat >> LIG.itp << EOF
+
+; Ligand position restraints
+#ifdef POSRES_${LIG_NAME}
+#include "posre_${LIG_NAME}.itp"
+#endif
+EOF
+fi
+
 # ---------------------------------------------------------------------------
 log "[${PROTEIN}] 2) 단백질 + 리간드 좌표 병합 → complex.gro"
 # .gro 구조: 1=title, 2=원자수, 3..N+2=원자, 마지막=박스벡터
@@ -123,7 +135,9 @@ rvdw        = 1.0
 pbc         = xyz
 EOF
 
-"${GMX}" grompp -f ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 1
+# maxwarn 2: 이온 추가 전이라 (1) net charge + Ewald 경고는 필연적이고,
+#            (2) EM 전이라 '제외원자 거리>컷오프' 경고가 날 수 있다(EM 이 해소).
+"${GMX}" grompp -f ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 2
 
 # SOL 그룹을 이온으로 치환. 입력 그룹 선택은 stdin 으로 "SOL".
 echo "SOL" | "${GMX}" genion \

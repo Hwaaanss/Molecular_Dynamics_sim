@@ -1,7 +1,31 @@
 # GROMACS GPU 가속 설정 (NVIDIA A100 80GB)
 
-이 문서는 GROMACS 가 A100 GPU 를 최대한 활용하도록 **빌드** 하고 **실행** 하는
-방법을 정리한다.
+이 문서는 GROMACS 가 A100 GPU 를 활용하도록 **빌드** 하고 **실행** 하는 방법을 정리한다.
+
+---
+
+## 0. 현재 환경 상태 (이미 설정 완료)
+
+이 저장소가 설치된 머신에는 **CUDA 빌드가 이미 완료**되어 있다:
+
+- 위치: `~/gromacs-gpu/bin/gmx`  (GROMACS 2024.4, `GPU support: CUDA`, SM_80)
+- `scripts/common.sh` 가 이 바이너리를 자동으로 우선 사용한다 (`GMX_CUDA_PREFIX` 로 override 가능).
+- conda 의 GROMACS(OpenCL)는 NVIDIA A100 과 호환되지 않으므로 사용하지 않는다.
+
+> **이 노드의 GPU 오프로딩 제약 (실측):**
+> 드라이버 535 + 멀티 A100 환경에서 GPU-resident 기능이 불안정하다.
+> - `-pme gpu`  → **hang** (무한 대기)
+> - `-update gpu` → **hang**
+> - `-bonded gpu` → **illegal memory access (CUDA #700)**
+> - `-nb gpu` (비결합만) → **정상**
+>
+> 따라서 `common.sh` 는 **비결합만 GPU**(`-nb gpu -pme cpu -bonded cpu -update cpu`)로
+> 실행한다. 비결합 계산이 런타임의 큰 부분이라 가속 효과는 충분하며, PME 는 CPU
+> 스레드(`NT_OMP`)가 담당한다. PME 가 병목이면 `NT_OMP` 를 늘린다
+> (예: `NT_OMP=32 ./scripts/run_pipeline.sh 6VQN md`).
+> 드라이버/GROMACS 업그레이드 후 `common.sh` 의 CUDA 분기에서 `-pme gpu` 재시도 가능.
+
+아래 1~2 절은 (다른 머신에서) CUDA 빌드를 처음부터 할 때의 참고 절차다.
 
 ---
 

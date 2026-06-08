@@ -1,0 +1,40 @@
+; nvt.mdp - 위치제한 하 온도 평형화
+define          = -DPOSRES -DPOSRES_LIG
+integrator      = md
+nsteps          = 50000   ; 2 fs/step
+dt              = 0.002
+; 출력
+nstxout         = 0
+nstvout         = 0
+nstenergy       = 500
+nstlog          = 500
+; 결합 제약
+continuation    = no
+constraint_algorithm = lincs
+constraints     = h-bonds
+lincs_iter      = 1
+lincs_order     = 4
+; 이웃탐색
+cutoff-scheme   = Verlet
+ns_type         = grid
+nstlist         = 20
+rcoulomb        = 1.0
+rvdw            = 1.0
+; 정전기
+coulombtype     = PME
+pme_order       = 4
+fourierspacing  = 0.16
+; 온도커플링
+tcoupl          = V-rescale
+tc-grps         = Protein_LIG Water_and_ions
+tau_t           = 0.1 0.1
+ref_t           = 300 300
+; 압력커플링 없음
+pcoupl          = no
+; PBC / 분산보정
+pbc             = xyz
+DispCorr        = EnerPres
+; 초기속도 생성
+gen_vel         = yes
+gen_temp        = 300
+gen_seed        = -1

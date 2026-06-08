@@ -1,0 +1,76 @@
+============================================================================
+| ACPYPE: AnteChamber PYthon Parser interfacE v. 2023.10.27 (c) 2026 AWSdS |
+============================================================================
+DEBUG: CLI: -i /home/dioxide421/Molecular_Dynamics_sim/output/ligand/LIG.mol2 -b LIG -c bcc -a gaff2 -n 0 -o gmx
+DEBUG: Python Version 3.10.20 | packaged by conda-forge | (main, Mar 5 2026, 16:42:22) [GCC 14.3.0]
+DEBUG: Max execution time tolerance is 3h
+DEBUG: /home/dioxide421/.conda/envs/moledyn/bin/antechamber -dr no -i LIG.mol2 -fi mol2 -o tmp -fo ac -pf y
+DEBUG: Info: The atom type is set to gaff; the options available to the -at flag are
+ gaff, gaff2, amber, bcc, abcg2, and sybyl.
+
+
+DEBUG: setResNameCheckCoords done
+DEBUG: Net charge drift '0.000000'
+==> ... charge set to 0
+==> Executing Antechamber...
+DEBUG: /home/dioxide421/.conda/envs/moledyn/bin/antechamber -dr no -i LIG.mol2 -fi mol2 -o LIG_bcc_gaff2.mol2 -fo mol2 -c bcc -nc 0 -m 1 -s 2 -df 2 -at gaff2 -pf n 
+DEBUG: No file left to be removed
+==> * Antechamber OK *
+DEBUG: /home/dioxide421/.conda/envs/moledyn/bin/parmchk2 -i LIG_bcc_gaff2.mol2 -f mol2 -o LIG_AC.frcmod -s 2
+==> * Parmchk OK *
+DEBUG: No crd or prm files left to be removed
+==> Executing Tleap...
+DEBUG: /home/dioxide421/.conda/envs/moledyn/bin/tleap -f tleap.in
+DEBUG: ++++++++++start_quote+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+DEBUG: Checking 'LIG'....
+Checking parameters for unit 'LIG'.
+Checking for bond parameters.
+Checking for angle parameters.
+Unit is OK.
+DEBUG: ++++++++++end_quote+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+==> * Tleap OK *
+==> Removing temporary files...
+DEBUG: prmtop and inpcrd files loaded
+DEBUG: basename defined = 'LIG'
+DEBUG: getCoords done
+DEBUG: getABCOEFs done
+DEBUG: charge to be balanced: total -0.0029999978
+DEBUG: balanceCharges done
+DEBUG: Balanced TotalCharge -0.0000000000
+DEBUG: PBC = None
+DEBUG: getAtoms done
+DEBUG: getBonds done
+DEBUG: getAngles done
+DEBUG: getDihedrals done
+==> Using OpenBabel v.3.1.0
+
+==> Writing GROMACS files
+
+==> Disambiguating lower and uppercase atomtypes in GMX top file, even if identical.
+
+DEBUG: writing GRO file
+DEBUG: Box size estimated
+DEBUG: writing POSRE file
+DEBUG: atomTypes 13
+DEBUG: GMX atomtypes done
+DEBUG: atoms 47
+DEBUG: GMX atoms done
+DEBUG: bonds 51
+DEBUG: GMX bonds done
+DEBUG: atomPairs 118
+DEBUG: GMX pairs done
+DEBUG: angles 91
+DEBUG: GMX angles done
+DEBUG: setProperDihedralsCoef done
+DEBUG: properDihedralsCoefRB 137
+DEBUG: properDihedralsAlphaGamma 0
+DEBUG: properDihedralsGmx45 138
+==> Writing GMX dihedrals for GMX 4.5 and higher.
+
+DEBUG: GMX special proper dihedrals done
+DEBUG: improperDihedrals 15
+DEBUG: GMX improper dihedrals done
+==> Writing pickle file LIG.pkl
+==> Removing temporary files...
+Total time of execution: 58s
+DEBUG: No tmp folder left to be removed

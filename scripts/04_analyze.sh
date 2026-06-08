@@ -30,29 +30,25 @@ printf "Protein\nSystem\n" | "${GMX}" trjconv \
   -center -pbc mol -ur compact
 
 # ---------------------------------------------------------------------------
-log "[${PROTEIN}] 2) 분석용 인덱스 생성 (Backbone / LIG)"
-"${GMX}" select -s md.tpr -on "${ANADIR}/ana.ndx" \
-  -select '"Backbone" backbone' \
-          "\"LIG\" resname ${LIG_NAME}"
-
-# ---------------------------------------------------------------------------
-log "[${PROTEIN}] 3) RMSD (backbone, 단백질에 fit)"
+# 분석은 md.tpr 의 기본 그룹(Backbone, ${LIG_NAME})을 그대로 사용한다.
+# (resname 을 LIG 로 통일했으므로 'LIG' 그룹이 기본으로 존재)
+log "[${PROTEIN}] 2) RMSD (backbone, 단백질에 fit)"
 printf "Backbone\nBackbone\n" | "${GMX}" rms \
-  -s md.tpr -f "${ANADIR}/md_center.xtc" -n "${ANADIR}/ana.ndx" \
+  -s md.tpr -f "${ANADIR}/md_center.xtc" \
   -o "${ANADIR}/rmsd_backbone.xvg" -tu ns
 
-log "[${PROTEIN}] 4) RMSD (리간드, 단백질 backbone 에 fit)"
-printf "Backbone\nLIG\n" | "${GMX}" rms \
-  -s md.tpr -f "${ANADIR}/md_center.xtc" -n "${ANADIR}/ana.ndx" \
+log "[${PROTEIN}] 3) RMSD (리간드, 단백질 backbone 에 fit)"
+printf "Backbone\n${LIG_NAME}\n" | "${GMX}" rms \
+  -s md.tpr -f "${ANADIR}/md_center.xtc" \
   -o "${ANADIR}/rmsd_ligand.xvg" -tu ns
 
-log "[${PROTEIN}] 5) RMSF (잔기별, backbone)"
+log "[${PROTEIN}] 4) RMSF (잔기별, backbone)"
 printf "Backbone\n" | "${GMX}" rmsf \
-  -s md.tpr -f "${ANADIR}/md_center.xtc" -n "${ANADIR}/ana.ndx" \
+  -s md.tpr -f "${ANADIR}/md_center.xtc" \
   -o "${ANADIR}/rmsf_backbone.xvg" -res
 
 # ---------------------------------------------------------------------------
-log "[${PROTEIN}] 6) XVG → PNG 변환"
+log "[${PROTEIN}] 5) XVG → PNG 변환"
 python3 "${SCRIPT_DIR}/05_plot.py" \
   --title "${PROTEIN}" \
   --outdir "${ANADIR}" \

@@ -22,12 +22,18 @@ require_cmd "${GMX}"
 mkdir -p "${WORKDIR}"
 cd "${WORKDIR}"
 
-log "[${PROTEIN}] 1) PDB 정제: 물(HOH)/헤테로원자(HETATM)/리간드 제거"
-# 표준 단백질 원자(ATOM) 와 체인 종결(TER) 레코드만 보존.
-#  → 결정수, 공결정 리간드, 이온 등이 모두 제거된다.
-#  (참고: MSE 등 비표준 잔기는 HETATM 이라 함께 제거됨. 필요시 별도 처리.)
-grep -E '^(ATOM|TER)' "${SRC_PDB}" > protein_clean.pdb
-echo "END" >> protein_clean.pdb
+log "[${PROTEIN}] 1) PDB 정제 + 결손 구조 복원"
+# 결정구조는 곁사슬 원자/내부 루프가 빠진 경우가 많다. 이를 보정하지 않으면
+# pdb2gmx 가 (a) 결손 원자 fatal error 를 내거나 (b) 갭을 가로질러 비정상
+# 장거리 결합을 만든다. PDBFixer 로 사전 복원한다 (없으면 단순 grep 정제).
+if python3 -c "import pdbfixer" >/dev/null 2>&1; then
+  python3 "${SCRIPT_DIR}/clean_protein.py" --in "${SRC_PDB}" --out protein_clean.pdb
+else
+  warn "PDBFixer 미설치 → 단순 정제(결손 원자/잔기 복원 불가)."
+  warn "  권장: conda install -n moledyn -c conda-forge pdbfixer openmm"
+  grep -E '^(ATOM|TER)' "${SRC_PDB}" > protein_clean.pdb
+  echo "END" >> protein_clean.pdb
+fi
 
 n_atom=$(grep -c '^ATOM' protein_clean.pdb || true)
 [[ "${n_atom}" -gt 0 ]] || die "정제 후 ATOM 레코드가 0개입니다. PDB 형식을 확인하세요."
