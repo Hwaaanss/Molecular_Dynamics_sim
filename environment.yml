@@ -1,0 +1,33 @@
+# =============================================================================
+# environment.yml - conda 가상환경 'moledyn'
+#   리간드/단백질 전처리에 필요한 도구 모음.
+#
+#   생성:  conda env create -f environment.yml
+#   활성화: conda activate moledyn
+#
+#   주의: GROMACS 는 GPU(CUDA) 가속을 위해 보통 소스 빌드가 권장된다.
+#         conda 의 gromacs 패키지는 CPU/일반 빌드이므로, A100 GPU 가속을
+#         최대로 쓰려면 docs/GPU_SETUP.md 의 소스빌드 절차를 따른다.
+#         (전처리/문법검증 용도로는 conda gromacs 로 충분하다.)
+# =============================================================================
+name: moledyn
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  # --- 분자 처리 핵심 ---
+  - rdkit            # SDF 파싱 / net charge 산출
+  - openbabel        # SDF -> mol2 변환, 양성자화
+  - ambertools       # antechamber, GAFF/AM1-BCC (ACPYPE 백엔드)
+  - acpype           # SDF/mol2 -> GROMACS itp/gro
+  - mdtraj           # 궤적 분석(보조)
+  # --- 시뮬레이션 (전처리/검증용; GPU 빌드는 GPU_SETUP.md 참고) ---
+  - gromacs
+  # --- 시각화 / 수치 ---
+  - matplotlib
+  - numpy
+  - pandas
+  # --- 유틸 ---
+  - wget
+  - pip
