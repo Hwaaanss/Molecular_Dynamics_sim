@@ -26,6 +26,14 @@ require_cmd "${GMX}"
 [[ -d "${ACPYPE_DIR}" ]] || die "리간드 ACPYPE 폴더 없음. 먼저 00_prepare_ligand.py 실행: ${ACPYPE_DIR}"
 cd "${WORKDIR}"
 
+# 멱등성: 이미 시스템이 구축돼 있으면 재생성하지 않는다(solvate/genion 이 topol.top 에
+#  중복 append 되거나, 재빌드로 원자수가 바뀌어 기존 em/nvt/md 와 불일치하는 것 방지).
+#  다시 만들려면 output/<PROTEIN> 를 지우고 실행.
+if [[ -f solv_ions.gro ]]; then
+  log "[${PROTEIN}] solv_ions.gro 이미 존재 → 시스템 구축 skip"
+  exit 0
+fi
+
 LIG_GRO="${ACPYPE_DIR}/${LIG_NAME}_GMX.gro"
 LIG_ITP_SRC="${ACPYPE_DIR}/${LIG_NAME}_GMX.itp"
 LIG_TOP_SRC="${ACPYPE_DIR}/${LIG_NAME}_GMX.top"

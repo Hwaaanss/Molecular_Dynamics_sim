@@ -22,6 +22,13 @@ require_cmd "${GMX}"
 mkdir -p "${WORKDIR}"
 cd "${WORKDIR}"
 
+# 멱등성: 이미 완료돼 있으면 재생성하지 않는다(재실행 시 topol/좌표 불일치 방지).
+#  다시 만들려면 output/<PROTEIN> 를 지우고 실행.
+if [[ -f topol.top && -f protein.gro ]]; then
+  log "[${PROTEIN}] 단백질 토폴로지 이미 존재 → skip"
+  exit 0
+fi
+
 log "[${PROTEIN}] 1) PDB 정제 + 결손 구조 복원"
 # 결정구조는 곁사슬 원자/내부 루프가 빠진 경우가 많다. 이를 보정하지 않으면
 # pdb2gmx 가 (a) 결손 원자 fatal error 를 내거나 (b) 갭을 가로질러 비정상

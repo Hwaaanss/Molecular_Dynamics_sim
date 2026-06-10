@@ -19,6 +19,14 @@ require_cmd "${GMX}"
 [[ -f "${WORKDIR}/solv_ions.gro" ]] || die "solv_ions.gro 없음. 먼저 02_build_system.sh 실행."
 cd "${WORKDIR}"
 
+# 멱등성: production 이 이미 끝났으면(md.gro 존재) MD 단계 전체를 건너뛴다.
+#  (dirty 폴더 재실행 시 grompp 가 옛 em.gro vs 새 topol.top 로 원자수 불일치 나는 것 방지)
+#  production 을 다시 돌리려면 output/<PROTEIN>/md.* 를 지우고 실행.
+if [[ -f md.gro ]]; then
+  log "[${PROTEIN}] production(md.gro) 이미 완료 → MD 단계 전체 skip"
+  exit 0
+fi
+
 # ---------------------------------------------------------------------------
 # 체크포인트 인지형 mdrun 래퍼.
 #   - <deffnm>.gro 가 이미 있으면 완료된 것으로 보고 skip
@@ -228,3 +236,23 @@ EOF
 run_mdrun md ${MDRUN_GPU_UPDATE}
 
 log "[${PROTEIN}] MD 완료 → ${WORKDIR}/md.xtc , md.gro , md.tpr"
+
+
+# =============================================================================
+# ⭐ [추가] PBC 보정 및 분석 데이터 추출 단계 (지그재그 깨짐 현상 해결)
+# =============================================================================
+log "[${PROTEIN}] === Stage 5: PBC Post-Processing & Analysis ==="
+
+# 1. 분자 온전화(whole) → 주기경계 점프 제거(nojump).
+#    다중 체인 복합체가 흩어지지 않게 한다. (-pbc mol/center 는 체인을 분리시켜
+#    RMSD 가 4~6 nm 로 폭발하므로 분석용으론 쓰지 않는다. rms/rmsf 가 회전+병진 fit 함.)
+echo "System" | "${GMX}" trjconv -s md.tpr -f md.xtc       -o md_whole.xtc  -pbc whole
+echo "System" | "${GMX}" trjconv -s md.tpr -f md_whole.xtc -o md_center.xtc -pbc nojump
+rm -f md_whole.xtc
+
+# 2. 분석: md.tpr 의 기본 그룹(Backbone, C-alpha)을 사용한다.
+#    index.ndx 에는 Backbone/C-alpha 가 없으므로 -n 을 주면 안 된다.
+echo "Backbone Backbone" | "${GMX}" rms  -s md.tpr -f md_center.xtc -o rmsd.xvg -tu ns
+echo "C-alpha"           | "${GMX}" rmsf -s md.tpr -f md_center.xtc -o rmsf.xvg -res
+
+log "[${PROTEIN}] PBC 보정 및 분석 완료 → rmsd.xvg, rmsf.xvg 생성됨"

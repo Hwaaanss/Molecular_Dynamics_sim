@@ -46,7 +46,7 @@ SALT_CONC="${SALT_CONC:-0.15}"                # genion -conc (mol/L)
 # 평형화/Production 길이 (2 fs/step). 테스트용 기본값. 스모크테스트 시 줄여서 override.
 NVT_NSTEPS="${NVT_NSTEPS:-50000}"     # 100 ps
 NPT_NSTEPS="${NPT_NSTEPS:-50000}"     # 100 ps
-PROD_NSTEPS="${PROD_NSTEPS:-500000}"  # 1 ns
+PROD_NSTEPS="${PROD_NSTEPS:-10000000}"  # 20 ns
 
 # ----- GPU / 병렬 자원 (A100 80GB 기준 기본값) -------------------------------
 GPU_ID="${GPU_ID:-0}"

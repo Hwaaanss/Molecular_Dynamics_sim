@@ -23,11 +23,16 @@ mkdir -p "${ANADIR}"
 cd "${WORKDIR}"
 
 # ---------------------------------------------------------------------------
-log "[${PROTEIN}] 1) trjconv: PBC 보정 + 단백질 centering"
-# 1차: 분자 단위 PBC 처리 + 단백질 중심정렬 (입력그룹: Protein, 출력그룹: System)
-printf "Protein\nSystem\n" | "${GMX}" trjconv \
-  -s md.tpr -f md.xtc -o "${ANADIR}/md_center.xtc" \
-  -center -pbc mol -ur compact
+log "[${PROTEIN}] 1) trjconv: PBC 보정 (whole → nojump)"
+# 단일 -pbc mol 로는 다중 체인 복합체가 주기경계로 흩어져 RMSD 가 폭발한다.
+#  (1) -pbc whole : 깨진 분자 복원
+#  (2) -pbc nojump: 프레임 간 점프 제거 → 복합체가 한 덩어리로 유지
+# gmx rms/rmsf 가 회전+병진 fit 을 하므로 centering 없이도 RMSD 가 정확하다.
+printf "System\n" | "${GMX}" trjconv \
+  -s md.tpr -f md.xtc -o "${ANADIR}/_whole.xtc" -pbc whole
+printf "System\n" | "${GMX}" trjconv \
+  -s md.tpr -f "${ANADIR}/_whole.xtc" -o "${ANADIR}/md_center.xtc" -pbc nojump
+rm -f "${ANADIR}/_whole.xtc"
 
 # ---------------------------------------------------------------------------
 # 분석은 md.tpr 의 기본 그룹(Backbone, ${LIG_NAME})을 그대로 사용한다.
